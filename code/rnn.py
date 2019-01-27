@@ -216,7 +216,7 @@ class RNN(object):
 		for t in range(len(x)):
 			y = prediction[t,:]
 			dt = make_onehot(d[t],self.vocab_size)
-			loss_t = -np.dot(np.trnaspose(dt),log(y))
+			loss_t = -np.dot(np.transpose(dt),np.log(y))
 			loss += loss_t
 
 		return loss

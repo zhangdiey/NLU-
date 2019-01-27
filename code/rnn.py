@@ -120,6 +120,16 @@ class RNN(object):
 			##########################
 			# --- your code here --- #
 			##########################
+			dt = make_onehot(d[t],self.vocab_size)
+			delta_out = dt-y[t]
+			self.deltaW += np.outer(delta_out,s[t+1])
+			f_prime = s[t+1] * (1-s[t+1])
+			delta_in = np.dot(np.transpose(self.W),delta_out) * f_prime
+			xt = make_onehot(x[t],self.vocab_size)
+			self.deltaV += np.outer(delta_in, xt)
+			self.deltaU = np.outer(delta_in,s[t])
+
+
 
 
 
@@ -169,6 +179,19 @@ class RNN(object):
 			##########################
 			# --- your code here --- #
 			##########################
+			dt = make_onehot(d[t], self.vocab_size)
+			delta_out = dt - y[t]
+			self.deltaW += np.outer(delta_out, s[t + 1])
+			for step in range(steps+1):
+				t_back = t - step
+				if t_back < 0:
+					break
+				f_prime = s[t_back + 1] * (1 - s[t_back + 1])
+				delta_in = np.dot(np.transpose(self.W), delta_out) * f_prime
+				xt = make_onehot(x[t_back], self.vocab_size)
+				self.deltaV += np.outer(delta_in, xt)
+				self.deltaU = np.outer(delta_in, s[t_back])
+
 
 
 	def acc_deltas_bptt_np(self, x, d, y, s, steps):

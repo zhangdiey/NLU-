@@ -90,10 +90,10 @@ class RNN(object):
 			##########################
 			# --- your code here --- #
 			##########################
-			x_onehot = make_onehot(x[t])
-			NetIn = self.V*x_onehot + self.U*np.transpose(s[t,:])
+			x_onehot = make_onehot(x[t],self.vocab_size)
+			NetIn = np.dot(self.V,x_onehot) + np.dot(self.U,np.transpose(s[t,:]))
 			s[t+1:,] = sigmoid(NetIn)
-			NetOut = self.W*np.transpose(s[t+1,:])
+			NetOut = np.dot(self.W,np.transpose(s[t+1,:]))
 			y[t,:] = softmax(NetOut)
 
 
@@ -215,8 +215,8 @@ class RNN(object):
 		prediction,_ = predict(x)
 		for t in range(len(x)):
 			y = prediction[t,:]
-			dt = make_onehot(d[t])
-			loss_t = -np.dot(np.trnaspose(dt)*log(y))
+			dt = make_onehot(d[t],self.vocab_size)
+			loss_t = -np.dot(np.trnaspose(dt),log(y))
 			loss += loss_t
 
 		return loss

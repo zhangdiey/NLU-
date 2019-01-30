@@ -690,10 +690,9 @@ if __name__ == "__main__":
 
 		run_loss = -1
 		adjusted_loss = -1
-		rnn.train(X_train,D_train,X_dev,D_dev)
+		rnn.train(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback )
 
 		run_loss = rnn.compute_mean_loss(X_train,D_train)
-		print(run_loss)
 
 		print("Unadjusted: %.03f" % np.exp(run_loss))
 		print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))

@@ -91,11 +91,10 @@ class RNN(object):
 			# --- your code here --- #
 			##########################
 			x_onehot = make_onehot(x[t],self.vocab_size)
-			NetIn = np.dot(self.V,x_onehot) + np.dot(self.U,np.transpose(s[t,:]))
-			s[t+1:,] = sigmoid(NetIn)
-			NetOut = np.dot(self.W,np.transpose(s[t+1,:]))
+			NetIn = np.dot(self.V, x_onehot) + np.dot(self.U, np.transpose(s[t-1, :]))
+			s[t,:] = sigmoid(NetIn)
+			NetOut = np.dot(self.W,np.transpose(s[t,:]))
 			y[t,:] = softmax(NetOut)
-
 
 		return y, s
 
@@ -120,14 +119,14 @@ class RNN(object):
 			##########################
 			# --- your code here --- #
 			##########################
-			dt = make_onehot(d[t],self.vocab_size)
+			dt = make_onehot(d[t],self.out_vocab_size)
 			delta_out = dt-y[t]
-			self.deltaW += np.outer(delta_out,s[t+1])
-			f_prime = s[t+1] * (1-s[t+1])
+			self.deltaW += np.outer(delta_out,s[t])
+			f_prime = s[t] * (1-s[t])
 			delta_in = np.dot(np.transpose(self.W),delta_out) * f_prime
 			xt = make_onehot(x[t],self.vocab_size)
 			self.deltaV += np.outer(delta_in, xt)
-			self.deltaU = np.outer(delta_in,s[t])
+			self.deltaU += np.outer(delta_in,s[t-1])
 
 
 
@@ -179,19 +178,27 @@ class RNN(object):
 			##########################
 			# --- your code here --- #
 			##########################
-			dt = make_onehot(d[t], self.vocab_size)
+			dt = make_onehot(d[t], self.out_vocab_size)
 			delta_out = dt - y[t]
-			self.deltaW += np.outer(delta_out, s[t + 1])
-			for step in range(steps+1):
+			self.deltaW += np.outer(delta_out, s[t])
+			f_prime = s[t] * (1 - s[t])
+			delta_in = np.dot(np.transpose(self.W), delta_out) * f_prime
+			xt = make_onehot(x[t], self.vocab_size)
+			self.deltaV += np.outer(delta_in, xt)
+			self.deltaU += np.outer(delta_in, s[t - 1])
+			delta_in_buf = np.zeros((steps+1,len(delta_in)))
+			delta_in_buf[0] = delta_in
+			for step in range(steps):
+				step += 1
 				t_back = t - step
 				if t_back < 0:
 					break
-				f_prime = s[t_back + 1] * (1 - s[t_back + 1])
-				delta_in = np.dot(np.transpose(self.W), delta_out) * f_prime
-				xt = make_onehot(x[t_back], self.vocab_size)
-				self.deltaV += np.outer(delta_in, xt)
-				self.deltaU = np.outer(delta_in, s[t_back])
-
+				f_prime = s[t_back] * (1 - s[t_back])
+				delta_in = np.dot(np.transpose(self.U),delta_in_buf[step-1]) * f_prime
+				delta_in_buf[step] = delta_in
+				xt_back = make_onehot(x[t_back], self.vocab_size)
+				self.deltaV += np.outer(delta_in, xt_back)
+				self.deltaU += np.outer(delta_in, s[t_back - 1])
 
 
 	def acc_deltas_bptt_np(self, x, d, y, s, steps):
@@ -235,10 +242,10 @@ class RNN(object):
 		##########################
 		# --- your code here --- #
 		##########################
-		prediction,_ = predict(x)
+		prediction,_ = self.predict(x)
 		for t in range(len(x)):
 			y = prediction[t,:]
-			dt = make_onehot(d[t],self.vocab_size)
+			dt = make_onehot(d[t],self.out_vocab_size)
 			loss_t = -np.dot(np.transpose(dt),np.log(y))
 			loss += loss_t
 
@@ -332,14 +339,16 @@ class RNN(object):
 		# --- your code here --- #
 		##########################
 		total_loss = 0
+		total_count = 0
 
 		for i in range(len(X)):
-			x = X[i,:]
-			d = D[i,:]
-			loss = compute_loss(x,d)
+			x = X[i]
+			d = D[i]
+			loss = self.compute_loss(x,d)
 			total_loss += loss
+			total_count += len(x)
 
-		mean_loss = total_loss / len(X)
+		mean_loss = total_loss / total_count
 
 		return mean_loss
 
@@ -677,12 +686,17 @@ if __name__ == "__main__":
 		##########################
 		# --- your code here --- #
 		##########################
+		rnn = RNN(vocab_size,hdim,vocab_size)
 
 		run_loss = -1
-	    adjusted_loss = -1
+		adjusted_loss = -1
+		rnn.train(X_train,D_train,X_dev,D_dev)
 
-	    print("Unadjusted: %.03f" % np.exp(run_loss))
-	    print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
+		run_loss = rnn.compute_mean_loss(X_train,D_train)
+		print(run_loss)
+
+		print("Unadjusted: %.03f" % np.exp(run_loss))
+		print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
 
 
 	if mode == "train-np":

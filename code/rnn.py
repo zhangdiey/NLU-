@@ -690,7 +690,7 @@ if __name__ == "__main__":
 
 		run_loss = -1
 		adjusted_loss = -1
-		rnn.train(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback )
+		rnn.train(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback)
 
 		run_loss = rnn.compute_mean_loss(X_train,D_train)
 

@@ -326,7 +326,7 @@ class RNN(object):
 		##########################
 		y,_ = self.predict(x)
 		y = y[-1]
-		if (np.argmax(y[-1]) == d[0]):
+		if (np.argmax(y) == d[0]):
 			return 1
 		return 0
 
@@ -782,8 +782,10 @@ if __name__ == "__main__":
 		##########################
 		# --- your code here --- #
 		##########################
-
 		acc = 0.
+		rnn = RNN(vocab_size,hdim,vocab_size)
+		rnn.train_np(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback)
+		acc = sum([rnn.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
 		print("Accuracy: %.03f" % acc)
 

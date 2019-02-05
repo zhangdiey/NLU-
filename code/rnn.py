@@ -734,7 +734,7 @@ if __name__ == "__main__":
 		adjusted_loss = -1
 		rnn.train(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback)
 
-		run_loss = rnn.compute_mean_loss(X_train,D_train)
+		run_loss = rnn.compute_mean_loss(X_test,D_test)
 
 		print("Unadjusted: %.03f" % np.exp(run_loss))
 		print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
@@ -775,6 +775,11 @@ if __name__ == "__main__":
 		S_dev = docs_to_indices(sents, word_to_num, 0, 0)
 		X_dev, D_dev = seqs_to_npXY(S_dev)
 
+		# load test data
+		sents = load_np_dataset(data_folder + '/wiki-test.txt')
+		S_test = docs_to_indices(sents, word_to_num, 0, 0)
+		X_test, D_dev = seqs_to_npXY(S_test)
+
 		X_dev = X_dev[:dev_size]
 		D_dev = D_dev[:dev_size]
 
@@ -785,7 +790,7 @@ if __name__ == "__main__":
 		acc = 0.
 		rnn = RNN(vocab_size,hdim,vocab_size)
 		rnn.train_np(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback)
-		acc = sum([rnn.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+		acc = sum([rnn.compute_acc_np(X_test[i], D_test[i]) for i in range(len(X_test))]) / len(X_test)
 
 		print("Accuracy: %.03f" % acc)
 

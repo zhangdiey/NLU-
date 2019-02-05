@@ -716,6 +716,11 @@ if __name__ == "__main__":
 		S_dev = docs_to_indices(docs, word_to_num, 1, 1)
 		X_dev, D_dev = seqs_to_lmXY(S_dev)
 
+		# load test data
+		docs = load_np_dataset(data_folder + '/wiki-test.txt')
+		S_test = docs_to_indices(docs, word_to_num, 1, 1)
+		X_test, D_test = seqs_to_npXY(S_test)
+
 		X_train = X_train[:train_size]
 		D_train = D_train[:train_size]
 		X_dev = X_dev[:dev_size]
@@ -733,6 +738,9 @@ if __name__ == "__main__":
 		run_loss = -1
 		adjusted_loss = -1
 		rnn.train(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback)
+		np.save("rnn.V.npy",rnn.V)
+		np.save("rnn.W.npy",rnn.W)
+		np.save("rnn.U.npy",rnn.U)
 
 		run_loss = rnn.compute_mean_loss(X_test,D_test)
 
@@ -778,7 +786,7 @@ if __name__ == "__main__":
 		# load test data
 		sents = load_np_dataset(data_folder + '/wiki-test.txt')
 		S_test = docs_to_indices(sents, word_to_num, 0, 0)
-		X_test, D_dev = seqs_to_npXY(S_test)
+		X_test, D_test = seqs_to_npXY(S_test)
 
 		X_dev = X_dev[:dev_size]
 		D_dev = D_dev[:dev_size]
@@ -790,6 +798,9 @@ if __name__ == "__main__":
 		acc = 0.
 		rnn = RNN(vocab_size,hdim,vocab_size)
 		rnn.train_np(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback)
+		np.save("rnn.np.V.npy",rnn.V)
+		np.save("rnn.np.W.npy",rnn.W)
+		np.save("rnn.np.U.npy",rnn.U)
 		acc = sum([rnn.compute_acc_np(X_test[i], D_test[i]) for i in range(len(X_test))]) / len(X_test)
 
 		print("Accuracy: %.03f" % acc)

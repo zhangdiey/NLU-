@@ -690,7 +690,7 @@ if __name__ == "__main__":
 		code for training language model.
 		change this to different values, or use it to get you started with your own testing class
 		'''
-		train_size = 1000
+		train_size = 25000
 		dev_size = 1000
 		vocab_size = 2000
 
@@ -719,7 +719,7 @@ if __name__ == "__main__":
 		# load test data
 		docs = load_np_dataset(data_folder + '/wiki-test.txt')
 		S_test = docs_to_indices(docs, word_to_num, 1, 1)
-		X_test, D_test = seqs_to_npXY(S_test)
+		X_test, D_test = seqs_to_lmXY(S_test)
 
 		X_train = X_train[:train_size]
 		D_train = D_train[:train_size]
@@ -733,16 +733,24 @@ if __name__ == "__main__":
 		##########################
 		# --- your code here --- #
 		##########################
+		hdim = 50
 		rnn = RNN(vocab_size,hdim,vocab_size)
 
 		run_loss = -1
 		adjusted_loss = -1
-		rnn.train(X_train,D_train,X_dev,D_dev,learning_rate=lr,back_steps=lookback)
+		rnn.train(X_train,D_train,X_dev,D_dev,learning_rate=0.5,back_steps=5,anneal=0,batch_size=10,epochs=10)
 		np.save("rnn.V.npy",rnn.V)
 		np.save("rnn.W.npy",rnn.W)
 		np.save("rnn.U.npy",rnn.U)
 
-		run_loss = rnn.compute_mean_loss(X_test,D_test)
+		# rnn.U = np.load("rnn.U.npy")
+		# rnn.V = np.load("rnn.V.npy")
+		# rnn.W = np.load("rnn.W.npy")
+
+		loss = rnn.compute_mean_loss(X_dev,D_dev)
+		frac_loss = fraq_loss(vocab, word_to_num, vocab_size)
+		run_loss = adjust_loss(loss, frac_loss, q, mode='basic')
+		adjusted_loss = adjust_loss(loss, frac_loss, q, mode='adjusted')
 
 		print("Unadjusted: %.03f" % np.exp(run_loss))
 		print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
